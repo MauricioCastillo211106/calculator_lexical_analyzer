@@ -18,7 +18,12 @@ def calculate():
             result = calculate_expression(expression)
             response = jsonify({'result': result})
             logging.debug("Sending POST response with result: %s", result)
-            return jsonify({'result': result, 'status': 'success'}), 200
+            return jsonify({
+            'result': result['result'],
+            'tokens': result['original_tokens'],
+            'rpn': result['rpn_tokens'],
+            'status': 'success'
+        }), 200
         except Exception as e:
             error_msg = str(e)
             logging.error("Error processing expression: %s", error_msg, exc_info=True)
