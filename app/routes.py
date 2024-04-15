@@ -1,18 +1,33 @@
-from flask import Blueprint, request, jsonify
-from lexer.lexer import calculate_expression
 
-# Define un solo Blueprint con el prefijo de URL correcto.
-bp = Blueprint('calc', __name__, url_prefix='/calculate')
+from lexer.lexer import calculate_expression  # Asegúrate que esta importación es correcta
+from flask import Blueprint, request, jsonify, make_response
+import logging
 
-# Define una única función de vista para calcular la expresión.
-@bp.route('/', methods=['POST'])  # La URL completa será '/calculate/' debido al prefijo.
+bp = Blueprint('api', __name__, url_prefix='/api')
+
+@bp.route('/calculate', methods=['POST', 'OPTIONS'])
 def calculate():
-    data = request.json
-    expression = data.get('expression', '')
+    if request.method == 'OPTIONS':
+        response = _build_cors_prelight_response()
+        logging.debug("Sending OPTIONS response with headers: %s", response.headers)
+        return response
+    elif request.method == 'POST':
+        data = request.get_json()
+        expression = data.get('expression', '')
+        try:
+            result = calculate_expression(expression)
+            response = jsonify({'result': result})
+            logging.debug("Sending POST response with result: %s", result)
+            return jsonify({'result': result, 'status': 'success'}), 200
+        except Exception as e:
+            error_msg = str(e)
+            logging.error("Error processing expression: %s", error_msg, exc_info=True)
+            return jsonify({'error': str(e), 'status': 'error'}), 400
 
-    try:
-        # Llama a calculate_expression para obtener el resultado de la expresión.
-        result = calculate_expression(expression)
-        return jsonify({'result': result}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+def _build_cors_prelight_response():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "*")
+    response.headers.add("Access-Control-Allow-Methods", "*")
+    logging.debug("Preflight response headers set for CORS")
+    return response

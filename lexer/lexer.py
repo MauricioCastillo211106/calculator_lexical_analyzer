@@ -84,11 +84,7 @@ def calculate_expression(expression):
         raise ValueError("Unbalanced parentheses")
     rpn_tokens = infix_to_rpn(tokens)
     result = evaluate_rpn(rpn_tokens)
-    return {
-        'tokens': [(t[0], t[1]) for t in tokens],  # Lista de tokens
-        'rpn': rpn_tokens,  # Notación polaca inversa
-        'result': result  # Resultado final de la evaluación
-    }
+    return eval(expression)
 
 token_re = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in TOKENS.items())
 
